@@ -1,0 +1,83 @@
+---
+title: "rabies_analysis"
+format: html
+---
+
+\`\`\`{r} #\| label: load-packages #\| include: false
+
+library(tidyverse) '''
+
+## Introduction
+
+Rabies is a zoonotic viral disease caused by the rabies virus (RV). RV is a negative stranded RNA virus of the rhabdovirus family that primarily infects the central nervous system of mammals. Rabies, when contracted and once clinical symptoms develop, is almost universally fatal. Rabies can be transmitted through several routes, although bites from infected animals are by far the most common mode of transmission. Following a bite, virus-containing saliva enters the victim's skeletal muscle, where viral replication begins. The virus then enters motor neurons through neuromuscular junctions and travels between neurons via synaptic connections until it reaches the central nervous system (CNS). The mechanism by which RV crosses the synaptic cleft remains unknown. The goal of RV from the time of infection is to reach the brain directly from the point of transmission. Once it reaches the brain, it spreads throughout the peripheral nervous system as well as the autonomic nervous system, causing many organs to become affected. During this late stage of infection, RV also migrates to the salivary glands where it is prepared for transmission to the next host.
+
+Despite the high fatality rate associated with symptomatic rabies, timely post-exposure prophylaxis is highly effective at preventing disease. Passive antibody therapy with anti-rabies immune globulins (RIG) is used following suspected exposure to RV. Administration of rabies immune globulin (RIG) following exposure has reduced mortality to nearly zero when combined with appropriate vaccination before symptom onset. Despite the availability of effective vaccines and rabies immune globulin, thousands of people continue to die from rabies each year, particularly in low- and middle-income countries where access to healthcare and vaccination programs may be limited. Most human rabies deaths worldwide result from bites by infected domestic dogs, making rabies not only a medical issue but also a veterinary and public health challenge.
+
+The objective of this study is to analyze global rabies surveillance data to identify countries with the highest burden of reported human rabies deaths, evaluate temporal trends in rabies mortality, and examine whether economic status and geographic region are associated with disease burden. Understanding these relationships may help identify populations at increased risk and highlight opportunities for improved rabies prevention and control efforts.
+
+This analysis uses publicly available surveillance data reported by the World Health Organization (WHO). The dataset includes annual reported human rabies deaths from multiple countries over several years, allowing comparisons of disease burden across geographic regions and economic groups.
+
+## Data
+
+The data used in this analysis were obtained from the World Health Organization (WHO). The dataset contains human rabies surveillance data from multiple countries between 2010 and 2024. Variables include country, continent, reported human rabies deaths, and year. Additional economic indicators, including gross domestic product (GDP), were obtained from the World Bank Open Data database and merged with the WHO dataset using country and year as common identifiers. Combining epidemiological and economic data provides an opportunity to compare the global burden of rabies across geographic regions and evaluate the relationship between economic development and rabies mortality over time.
+
+##Load Packages
+
+```{r}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+##Import data
+
+```{r}
+
+rabies_data<- read_csv("data/data.csv")
+
+gdp <- read_csv(
+     "data/API_NY.GDP.MKTP.CD_DS2_en_csv_v2_234.csv",
+     skip = 4
+ )
+
+Country_metadata <- read_csv("data/Metadata_Country_API_NY.GDP.MKTP.CD_DS2_en_csv_v2_234.csv")
+```
+
+##clean rabies data
+
+```{r}
+
+rabies_data_clean <- rabies_data %>%
+     select(ParentLocation, Location, Period, Value)
+     
+rabies_data_clean<- rabies_data_clean %>%
+     filter (Value != "No data")
+```
+
+##clean GDP data
+
+```{r}
+gdp_clean <- gdp |>
+     select(
+         country = `Country Name`,
+         country_code = `Country Code`,
+         `2010`:`2024`
+     )
+```
+
+##clean metadata
+
+```{r}
+names(Country_metadata) <- c(
+     "Country code",
+     "Region",
+     "Income Group",
+     "Description",
+     "Country",
+     "NA"
+ )
+
+ Country_metadata <- Country_metadata |> 
+        select(`Country code`, 'Region', 'Income Group', 'Description', 'Country')
+```
