@@ -6,8 +6,6 @@ This was my first independent epidemiological data analysis in R. The report is 
 
 **Report:** [https://angelov1053.github.io/rabies-analysis/](https://angelov1053.github.io/rabies-analysis/)
 
-That link works after GitHub Pages is turned on for this repository (see below). Until then, open [`docs/rabies_analysis.html`](docs/rabies_analysis.html) locally. GitHub's file view shows the HTML source, not the rendered page.
-
 ## Question
 
 - Which countries reported the most human rabies deaths from 2010 to 2024, and which had the highest population-adjusted rates?
