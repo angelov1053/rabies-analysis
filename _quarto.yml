@@ -1,0 +1,8 @@
+project:
+  type: default
+  output-dir: docs
+  execute-dir: project
+  render:
+    - rabies_analysis.qmd
+  post-render:
+    - Rscript scripts/make-pages-index.R
