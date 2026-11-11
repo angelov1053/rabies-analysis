@@ -1,374 +1,1118 @@
 ---
 title: "Global Patterns in Reported Human Rabies Deaths (2010–2024)"
-format: html
+subtitle: "Reported deaths, population, and GDP per capita"
+author: "Angelo Vescio"
+date: "2026-11-11"
+date-format: "MMMM D, YYYY"
+execute:
+  message: false
+  warning: true
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    code-summary: "Show code"
+    fig-dpi: 144
+    fig-width: 8
+    fig-height: 5
+    fig-align: center
+    fig-cap-location: bottom
+    smooth-scroll: true
+    link-external-newwindow: true
+    embed-resources: true
 ---
 
 ## Introduction
 
-Rabies is a zoonotic viral disease caused by the rabies virus (RV). RV is a negative sense single stranded RNA virus of the rhabdovirus family that primarily infects the central nervous system of mammals. Rabies, when contracted and once clinical symptoms develop, is almost universally fatal. Rabies can be transmitted through several routes, although bites from infected animals are by far the most common mode of transmission. Following a bite, virus-containing saliva enters the victim's skeletal muscle, where viral replication begins. The virus then enters motor neurons through neuromuscular junctions and travels between neurons via synaptic connections until it reaches the central nervous system (CNS). The mechanism by which RV crosses the synaptic cleft remains unknown. The RV will slowly continue this process of jumping synaptic clefts until it reaches the brain. Once it reaches the brain, it spreads throughout the peripheral nervous system as well as the autonomic nervous system, causing many organs to become affected. During this late stage of infection, RV also migrates to the salivary glands where it is prepared for transmission to the next host.(Dietzschold et al., 2008)
+Rabies is a zoonotic viral disease caused by the rabies virus (RV). RV is a negative sense single stranded RNA virus of the rhabdovirus family that primarily infects the central nervous system of mammals. Rabies, when contracted and once clinical symptoms develop, is almost universally fatal. Rabies can be transmitted through several routes, although bites from infected animals are by far the most common mode of transmission. Following a bite, virus-containing saliva enters the victim's skeletal muscle, where viral replication begins. The virus then enters motor neurons through neuromuscular junctions and travels between neurons via synaptic connections until it reaches the central nervous system (CNS). The mechanism by which RV crosses the synaptic cleft remains unknown. The RV will slowly continue this process of jumping synaptic clefts until it reaches the brain. Once it reaches the brain, it spreads throughout the peripheral nervous system as well as the autonomic nervous system, causing many organs to become affected. During this late stage of infection, RV also migrates to the salivary glands where it is prepared for transmission to the next host (Dietzschold et al., 2008).
 
-Despite the high fatality rate associated with symptomatic rabies, timely post-exposure prophylaxis is highly effective at preventing disease. Passive antibody therapy with anti-rabies immune globulins (RIG) is used following suspected exposure to RV. Administration of rabies immune globulin (RIG) following exposure has reduced mortality to nearly zero when combined with appropriate vaccination before symptom onset.Experimental research in mice has also demonstrated improved protection against lethal rabies infection when anti-rabies antibody treatment was combined with vaccination (Terryn et al., 2016). Despite the availability of effective vaccines and rabies immune globulin, thousands of people continue to die from rabies each year, particularly in low- and middle-income countries where access to healthcare and vaccination programs may be limited. Most human rabies deaths worldwide result from bites by infected domestic dogs, making rabies not only a medical issue but also a veterinary and public health challenge.Historical surveillance research in the United States has documented substantial changes in human rabies deaths and animal exposures, demonstrating the importance of rabies prevention and public health surveillance (Pieracci et al., 2019).
+Despite the high fatality rate associated with symptomatic rabies, timely post-exposure prophylaxis is highly effective at preventing disease. Passive antibody therapy with anti-rabies immune globulins (RIG) is used following suspected exposure to RV. Administration of rabies immune globulin (RIG) following exposure has reduced mortality to nearly zero when combined with appropriate vaccination before symptom onset. Experimental research in mice has also demonstrated improved protection against lethal rabies infection when anti-rabies antibody treatment was combined with vaccination (Terryn et al., 2016). Despite the availability of effective vaccines and rabies immune globulin, thousands of people continue to die from rabies each year, particularly in low- and middle-income countries where access to healthcare and vaccination programs may be limited. Most human rabies deaths worldwide result from bites by infected domestic dogs, making rabies not only a medical issue but also a veterinary and public health challenge. Historical surveillance research in the United States has documented substantial changes in human rabies deaths and animal exposures, demonstrating the importance of rabies prevention and public health surveillance (Pieracci et al., 2019).
 
-The objective of this study is to analyze global rabies surveillance data to identify countries with the highest burden of reported human rabies deaths, evaluate temporal trends in rabies mortality, and examine whether economic status and geographic region are associated with disease burden. Understanding these relationships may help identify populations at increased risk and highlight opportunities for improved rabies prevention and control efforts.
+The objective of this study is to analyze global rabies surveillance data to identify countries with the highest burden of reported human rabies deaths, evaluate temporal trends in rabies mortality, and examine whether economic status and geographic region are associated with disease burden. The comparisons use cumulative reported deaths and population-adjusted death rates. Understanding these relationships may help identify populations at increased risk and highlight opportunities for improved rabies prevention and control efforts.
 
 This analysis uses publicly available surveillance data reported by the World Health Organization (WHO). The dataset includes annual reported human rabies deaths from multiple countries over several years, allowing comparisons of disease burden across geographic regions and economic groups.
 
 ## Data
 
-The data used in this analysis were obtained from the World Health Organization (World Health Organization, n.d.). The data set contains human rabies surveillance data from multiple countries between 2010 and 2024. Variables include country, continent, reported human rabies deaths, and year. Additional economic indicators, including gross domestic product(GDP per capita in USD), were obtained from the World Bank Open Data database(World Bank, n.d.). and merged with the WHO data set using country and year as common identifiers. Combining epidemiological and economic data provides an opportunity to compare the global burden of rabies across geographic regions and evaluate the relationship between economic development and rabies mortality over time.
+The death counts come from the WHO Global Health Observatory indicator "Reported number of human rabies deaths" (World Health Organization, n.d.). The extract covers 2010–2024. A blank value in that file means the country did not report a number for that year. It is not a zero. A zero in the file is a report of no deaths.
 
-## Load Packages
+Economic and population data come from the World Bank World Development Indicators (World Bank, n.d.-a, n.d.-b). GDP per capita is current US dollars (NY.GDP.PCAP.CD). Population is the midyear total population (SP.POP.TOTL), used as the denominator for rates. Income group and region come from the country metadata file already in the project. That metadata is one label per country for the whole period. It is not the income group the country held in each year.
+
+The population file was downloaded on 11 November 2026. The WHO extract was already in the project and was not re-downloaded. The World Bank update dates are read from the file headers in the code below. Filenames, original download names, and the columns used are written up in the repository file `data/README.md`.
+
+Countries are linked on the ISO3 code (`SpatialDimValueCode` in the WHO file, `Country Code` in the World Bank files). They are not linked on the English country name. Those names are often spelled differently in the two sources.
+
+## Methods
+
+### Preparing the country-year file
 
 ```{r}
+#| label: setup
 library(readr)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-```
+library(scales)
+library(broom)
+library(knitr)
 
-## Import data
+# Display helpers. Rates span several orders of magnitude, so small and
+# large numbers are not forced into the same number of decimals.
+fmt_int <- function(x) {
+  format(round(as.numeric(x)), big.mark = ",", scientific = FALSE, trim = TRUE)
+}
+fmt_gdp <- function(x) {
+  paste0("$", fmt_int(x))
+}
+fmt_rho <- function(x) sprintf("%.2f", as.numeric(x))
+fmt_pct <- function(x) sprintf("%.0f%%", 100 * as.numeric(x))
+fmt_date <- function(d) format(as.Date(d), "%d %B %Y")
+fmt_p <- function(p) {
+  vapply(p, function(one) {
+    if (is.na(one)) {
+      "—"
+    } else if (one < 0.001) {
+      "< 0.001"
+    } else {
+      sprintf("%.3f", one)
+    }
+  }, character(1))
+}
+fmt_rr <- function(x) {
+  vapply(as.numeric(x), function(one) {
+    if (is.na(one)) {
+      return("—")
+    }
+    ax <- abs(one)
+    if (ax >= 100) {
+      format(round(one), big.mark = ",", scientific = FALSE, trim = TRUE)
+    } else if (ax >= 10) {
+      sprintf("%.0f", one)
+    } else {
+      sprintf("%.2f", one)
+    }
+  }, character(1))
+}
+fmt_rate <- function(x) {
+  vapply(as.numeric(x), function(one) {
+    if (is.na(one)) {
+      return("—")
+    }
+    if (one == 0) {
+      return("0")
+    }
+    if (one >= 1) {
+      return(sprintf("%.2f", one))
+    }
+    trimws(formatC(signif(one, 3), format = "fg", digits = 3))
+  }, character(1))
+}
+fmt_list <- function(x) {
+  x <- as.character(x)
+  n <- length(x)
+  if (n <= 1) {
+    return(paste(x, collapse = ""))
+  }
+  if (n == 2) {
+    return(paste(x, collapse = " and "))
+  }
+  paste0(paste(x[-n], collapse = ", "), ", and ", x[n])
+}
+fmt_years <- function(years) fmt_list(as.character(sort(unique(years))))
 
-```{r}
+# Rate ratio for a doubling of GDP per capita, with a Wald interval.
+doubling_rr <- function(model, term = "log_gdp") {
+  est <- coef(model)[[term]]
+  se <- sqrt(diag(vcov(model)))[[term]]
+  z <- qnorm(0.975)
+  est2 <- est * log(2)
+  se2 <- se * log(2)
+  data.frame(
+    rr = exp(est2),
+    lo = exp(est2 - z * se2),
+    hi = exp(est2 + z * se2),
+    p = 2 * pnorm(-abs(est / se))
+  )
+}
 
-rabies_data<- read_csv("data/data.csv")
-
-gdp <- read_csv(
-     "data/API_NY.GDP.PCAP.CD_DS2_en_csv_v2_33610.csv",
-     skip = 4
- )
-
-Country_metadata <- read_csv("data/Metadata_Country_API_NY.GDP.MKTP.CD_DS2_en_csv_v2_234.csv")
-```
-
-## Clean Rabies Data
-
-```{r}
-
-#make the rabies data smaller
-rabies_data_clean <- rabies_data %>%
-     select(ParentLocation, Location, Period, Value)
-     
-rabies_data_clean<- rabies_data_clean %>%
-     filter (Value != "No data")
-
-#rename our columns so they match other data sets
-names(rabies_data_clean) <- c(
-     "Location",
-     "Country",
-     "Year",
-     "Deaths"
- )
-```
-
-## Clean GDP Data
-
-```{r}
-#find the time span we are looking for and rename columns
-gdp_clean <- gdp |>
-     select(
-         country = `Country Name`,
-         country_code = `Country Code`,
-         `2010`:`2024`
-     )
-
-#tidy data so that years are now represented in rows not columns  
-gdp_clean <- gdp_clean |> 
-  pivot_longer(
-     cols = `2010`:`2024`,
-     names_to = "year",
-     values_to = "GDP per capita"
- )
-
-#rename our columns so they match other data sets
- names(gdp_clean) <- c(
-     "Country",
-     "Country code",
-     "Year",
-     "GDP per capita"
- )
- 
- #turn or year rows in numeric format so they match other data sets 
-  gdp_clean <- gdp_clean |>
-     mutate(Year = as.numeric(Year))
-```
-
-## Clean Metadata
-
-```{r}
-#rename columns
-names(Country_metadata) <- c(
-     "Country code",
-     "Region",
-     "Income Group",
-     "Description",
-     "Country",
-     "NA"
- )
-
-#shorten our data
- Country_metadata <- Country_metadata |> 
-        select(`Country code`, 'Region', 'Income Group', 'Description', 'Country')
-```
-
-## Merge Data
-
-```{r}
-#merge Rabies data and GDP data
- rabies_gdp <- left_join(
-     rabies_data_clean,
-     gdp_clean,
-     by = c("Country","Year")
- )
-
-#merge our metadata with our rabies and GDP data
-rabies_gdp <- left_join(
-     rabies_gdp,
-     Country_metadata,
-     by = c("Country")
- )
-
-#make sure our numbers are numeric
-rabies_gdp <- rabies_gdp |>
-    mutate(
-        Deaths = as.numeric(Deaths)
+theme_rabies <- function() {
+  theme_minimal(base_size = 13) +
+    theme(
+      plot.title = element_text(face = "bold", size = 13),
+      plot.caption = element_text(hjust = 0, size = 9, color = "grey30"),
+      legend.position = "bottom",
+      panel.grid.minor = element_blank()
     )
+}
+
+income_levels <- c(
+  "Low income",
+  "Lower middle income",
+  "Upper middle income",
+  "High income"
+)
+
+wdi_updated <- function(path) {
+  lines <- readLines(path, n = 5, encoding = "UTF-8", warn = FALSE)
+  hit <- grep("Last Updated Date", lines, value = TRUE)
+  as.Date(sub(".*([0-9]{4}-[0-9]{2}-[0-9]{2}).*", "\\1", hit[[1]]))
+}
 ```
+
+```{r}
+#| label: import-who
+who_raw <- read_csv(
+  "data/raw/who_reported_human_rabies_deaths.csv",
+  show_col_types = FALSE
+)
+
+# FactValueNumeric is the analysis value. Value is only a check:
+# it should be the same number, or the words "No data" where the fact is blank.
+value_num <- suppressWarnings(as.numeric(who_raw$Value))
+fact <- who_raw$FactValueNumeric
+agree <- (is.na(fact) & is.na(value_num)) |
+  (!is.na(fact) & !is.na(value_num) & abs(fact - value_num) < 1e-6)
+stopifnot(all(agree))
+stopifnot(all(who_raw$`Period type` == "Year"))
+stopifnot(all(who_raw$`Location type` == "Country"))
+
+who <- who_raw |>
+  transmute(
+    iso3 = SpatialDimValueCode,
+    country = Location,
+    who_region = ParentLocation,
+    year = as.integer(Period),
+    deaths = FactValueNumeric
+  )
+
+stopifnot(!any(duplicated(who[c("iso3", "year")])))
+```
+
+```{r}
+#| label: import-world-bank
+# World Bank extracts start with a four-line preamble before the header.
+read_wdi <- function(path, value_name) {
+  year_cols <- as.character(2010:2024)
+  read_csv(path, skip = 4, show_col_types = FALSE) |>
+    select(country_name = `Country Name`, iso3 = `Country Code`, all_of(year_cols)) |>
+    pivot_longer(all_of(year_cols), names_to = "year", values_to = "value") |>
+    mutate(
+      year = as.integer(year),
+      iso3 = na_if(iso3, "")
+    ) |>
+    filter(!is.na(iso3)) |>
+    rename(!!value_name := value)
+}
+
+gdp_path <- "data/raw/wb_ny_gdp_pcap_cd.csv"
+pop_path <- "data/raw/wb_sp_pop_totl.csv"
+gdp_updated <- wdi_updated(gdp_path)
+pop_updated <- wdi_updated(pop_path)
+
+gdp <- read_wdi(gdp_path, "gdp_per_capita")
+pop <- read_wdi(pop_path, "population")
+stopifnot(!any(duplicated(gdp[c("iso3", "year")])))
+stopifnot(!any(duplicated(pop[c("iso3", "year")])))
+
+meta <- read_csv(
+  "data/raw/wb_country_metadata.csv",
+  show_col_types = FALSE
+) |>
+  transmute(
+    iso3 = `Country Code`,
+    wb_region = na_if(Region, ""),
+    income_group = na_if(IncomeGroup, ""),
+    wb_name = TableName
+  )
+
+stopifnot(!any(duplicated(meta$iso3)))
+```
+
+The World Bank header dates the GDP per capita series `r fmt_date(gdp_updated)` and the population series `r fmt_date(pop_updated)`.
+
+```{r}
+#| label: link-country-years
+# ISO3, not the English country name.
+country_year <- who |>
+  left_join(gdp |> select(iso3, year, gdp_per_capita), by = c("iso3", "year")) |>
+  left_join(pop |> select(iso3, year, population), by = c("iso3", "year")) |>
+  left_join(meta, by = "iso3")
+
+reported <- country_year |>
+  filter(!is.na(deaths))
+
+# Rate, income, and region analyses need a population and a World Bank
+# income group and region. GDP is required only for the GDP analyses.
+linked <- reported |>
+  filter(
+    !is.na(population),
+    population > 0,
+    !is.na(income_group),
+    !is.na(wb_region)
+  )
+
+gdp_rows <- linked |>
+  filter(!is.na(gdp_per_capita), gdp_per_capita > 0)
+
+who_countries <- who |>
+  distinct(iso3, country)
+
+unmatched_countries <- who_countries |>
+  anti_join(meta, by = "iso3")
+
+wb_names <- gdp |>
+  distinct(iso3, country_name)
+
+name_gaps <- who_countries |>
+  inner_join(wb_names, by = "iso3") |>
+  filter(country != country_name) |>
+  inner_join(
+    reported |>
+      group_by(iso3) |>
+      summarise(deaths = sum(deaths), .groups = "drop"),
+    by = "iso3"
+  )
+
+gdp_gap <- reported |>
+  anti_join(
+    gdp |> filter(!is.na(gdp_per_capita)) |> select(iso3, year),
+    by = c("iso3", "year")
+  ) |>
+  group_by(iso3, country) |>
+  summarise(years = n(), deaths = sum(deaths), .groups = "drop") |>
+  arrange(desc(deaths))
+```
+
+```{r}
+#| label: tbl-match
+#| tbl-cap: "How completely the WHO reports matched the World Bank files."
+n_who_rows <- nrow(who)
+n_who_countries <- n_distinct(who$iso3)
+n_reported_rows <- nrow(reported)
+n_reported_countries <- n_distinct(reported$iso3)
+n_reported_deaths <- sum(reported$deaths)
+n_linked_rows <- nrow(linked)
+n_gdp_rows <- nrow(gdp_rows)
+deaths_unmatched_code <- sum(reported$deaths[reported$iso3 %in% unmatched_countries$iso3])
+
+match_summary <- tibble(
+  Check = c(
+    "Rows in the WHO file",
+    "Countries in the WHO file",
+    "Country-years with a numeric death count, including zeros",
+    "Countries with at least one numeric report",
+    "Reported deaths in those country-years",
+    "Numeric country-years matched to population, income group, and region",
+    "Numeric country-years also matched to GDP per capita",
+    "Reported deaths in countries with no World Bank code",
+    "Countries with a numeric report whose WHO name differs from the World Bank name",
+    "Reported deaths in those name-mismatch countries"
+  ),
+  Result = c(
+    fmt_int(n_who_rows),
+    fmt_int(n_who_countries),
+    paste0(
+      fmt_int(n_reported_rows),
+      " (", sprintf("%.1f%%", 100 * n_reported_rows / n_who_rows), " of WHO rows)"
+    ),
+    fmt_int(n_reported_countries),
+    fmt_int(n_reported_deaths),
+    paste0(
+      fmt_int(n_linked_rows),
+      " (", sprintf("%.1f%%", 100 * n_linked_rows / n_reported_rows), " of numeric rows)"
+    ),
+    paste0(
+      fmt_int(n_gdp_rows),
+      " (", sprintf("%.1f%%", 100 * n_gdp_rows / n_reported_rows), " of numeric rows)"
+    ),
+    fmt_int(deaths_unmatched_code),
+    fmt_int(nrow(name_gaps)),
+    fmt_int(sum(name_gaps$deaths))
+  )
+)
+
+kable(match_summary)
+```
+
+@tbl-match is the linkage check. Most numeric WHO rows find a World Bank population, income group, region, and GDP per capita. The misses are easier to see in the anti-joins below than in a single percentage.
+
+```{r}
+#| label: tbl-unmatched
+#| tbl-cap: "WHO countries with no World Bank country code. An anti-join of WHO countries to the World Bank metadata."
+unmatched_display <- unmatched_countries |>
+  left_join(
+    reported |>
+      group_by(iso3) |>
+      summarise(
+        reporting_years = n(),
+        reported_deaths = sum(deaths),
+        .groups = "drop"
+      ),
+    by = "iso3"
+  ) |>
+  mutate(
+    reporting_years = replace(reporting_years, is.na(reporting_years), 0L),
+    reported_deaths = replace(reported_deaths, is.na(reported_deaths), 0)
+  ) |>
+  arrange(desc(reported_deaths), country) |>
+  transmute(
+    `ISO3 code` = iso3,
+    `WHO name` = country,
+    `Years with a numeric report` = reporting_years,
+    `Reported deaths` = fmt_int(reported_deaths)
+  )
+
+kable(unmatched_display)
+```
+
+French Guiana is the only unmatched location with any reported deaths, and that total is small. It stays in the yearly sums and is left out of the rate comparisons. Cook Islands and Niue are in the WHO file and have no numeric report and no World Bank code.
+
+```{r}
+#| label: tbl-name-gaps
+#| tbl-cap: "Countries a join on the English country name would have missed. The ISO3 join keeps them. Deaths are the sum of numeric reports, including zeros."
+name_gap_display <- name_gaps |>
+  arrange(desc(deaths), country) |>
+  transmute(
+    `WHO name` = country,
+    `World Bank name` = country_name,
+    ISO3 = iso3,
+    `Reported deaths` = fmt_int(deaths)
+  )
+
+kable(name_gap_display)
+```
+
+A join on the English name against World Bank `Country Name` would have left these countries without GDP per capita. Tanzania, Yemen, and the Democratic Republic of the Congo are the largest death totals in that list. The ISO3 join is what the rest of this report uses.
+
+```{r}
+#| label: tbl-gdp-gap
+#| tbl-cap: "Reported country-years with no World Bank GDP per capita. An anti-join of numeric WHO rows to the GDP series. Yemen and Cuba have other years that do have GDP; those years stay in the GDP model."
+gdp_gap_display <- gdp_gap |>
+  transmute(
+    Country = country,
+    ISO3 = iso3,
+    `Years with no GDP per capita` = years,
+    `Reported deaths in those years` = fmt_int(deaths)
+  )
+
+kable(gdp_gap_display)
+```
+
+### Rates and models
+
+Yearly death totals use every numeric WHO report. They are a sum across whatever countries reported that year, not an estimate of all human rabies deaths in the world.
+
+For rates, each country is one row. Reported deaths are summed over the years that qualify, and so is population. The rate is reported deaths per 100,000 person-years: 100,000 times the sum of reported deaths, divided by the sum of population in those years.
+
+Person-years cover only years with a numeric report. A country that reports five years is not given the other ten. The rate, income, and region analyses use every linked year (deaths, population, income group, and region). The GDP analyses use only years that also have GDP per capita, so a country can contribute fewer years to the GDP model than to the income model.
+
+The rank correlation is Spearman. It asks whether higher GDP per capita goes with a lower rate without assuming a straight line. Ties are allowed.
+
+The regression is a negative binomial model for the death count, with an offset of log(person-years). The offset makes the coefficients about rates rather than about raw counts. Zero-death countries stay in the main model. A Poisson model was fit on the same GDP specification as a check on whether the extra negative binomial variation was needed. One sensitivity fit drops countries with zero deaths. Another adds World Bank region, so the GDP coefficient is not only a stand-in for geography. Income, region, and GDP are fit as separate descriptions. They overlap, and this is not a model that separates their effects, apart from that one region-adjusted GDP fit.
+
+These are ecological, cross-sectional associations. They do not estimate the effect of raising GDP, and a country-level association is not a statement about which people inside a country are at higher risk.
+
+```{r}
+#| label: build-country-models
+#| results: hide
+add_factors <- function(df) {
+  df |>
+    mutate(
+      income_f = factor(
+        income_group,
+        levels = c(
+          "High income",
+          "Upper middle income",
+          "Lower middle income",
+          "Low income"
+        )
+      ),
+      region_f = relevel(factor(wb_region), ref = "Europe & Central Asia")
+    )
+}
+
+country_rates <- linked |>
+  group_by(iso3, country, who_region, wb_region, income_group) |>
+  summarise(
+    years = n(),
+    year_min = min(year),
+    year_max = max(year),
+    deaths = sum(deaths),
+    person_years = sum(population),
+    .groups = "drop"
+  ) |>
+  mutate(rate_per_100k = deaths / person_years * 1e5) |>
+  add_factors()
+
+country_gdp <- gdp_rows |>
+  group_by(iso3, country, who_region, wb_region, income_group) |>
+  summarise(
+    years = n(),
+    deaths = sum(deaths),
+    person_years = sum(population),
+    gdp_per_capita = mean(gdp_per_capita),
+    .groups = "drop"
+  ) |>
+  mutate(
+    rate_per_100k = deaths / person_years * 1e5,
+    log_gdp = log(gdp_per_capita)
+  ) |>
+  add_factors()
+
+stopifnot(!any(duplicated(country_rates$iso3)))
+stopifnot(!any(duplicated(country_gdp$iso3)))
+stopifnot(all(country_gdp$iso3 %in% country_rates$iso3))
+stopifnot("Europe & Central Asia" %in% country_rates$wb_region)
+stopifnot("High income" %in% country_rates$income_group)
+
+country_gdp_pos <- country_gdp |>
+  filter(deaths > 0)
+
+# Main model keeps zeros. The offset is log(person-years), so the
+# log_gdp coefficient is a difference in the death rate.
+m_gdp <- MASS::glm.nb(
+  deaths ~ log_gdp + offset(log(person_years)),
+  data = country_gdp
+)
+m_gdp_pos <- MASS::glm.nb(
+  deaths ~ log_gdp + offset(log(person_years)),
+  data = country_gdp_pos
+)
+m_gdp_region <- MASS::glm.nb(
+  deaths ~ log_gdp + region_f + offset(log(person_years)),
+  data = country_gdp
+)
+m_inc <- MASS::glm.nb(
+  deaths ~ income_f + offset(log(person_years)),
+  data = country_rates
+)
+m_reg <- MASS::glm.nb(
+  deaths ~ region_f + offset(log(person_years)),
+  data = country_rates
+)
+m_pois <- glm(
+  deaths ~ log_gdp + offset(log(person_years)),
+  family = poisson,
+  data = country_gdp
+)
+
+stopifnot(
+  isTRUE(m_gdp$converged),
+  isTRUE(m_gdp_pos$converged),
+  isTRUE(m_gdp_region$converged),
+  isTRUE(m_inc$converged),
+  isTRUE(m_reg$converged)
+)
+
+pois_deviance <- m_pois$deviance
+pois_df <- m_pois$df.residual
+pois_aic <- AIC(m_pois)
+nb_aic <- AIC(m_gdp)
+nb_theta <- m_gdp$theta
+
+rr_primary <- doubling_rr(m_gdp)
+rr_positive <- doubling_rr(m_gdp_pos)
+rr_region <- doubling_rr(m_gdp_region)
+
+spearman_rate <- cor.test(
+  country_gdp$gdp_per_capita,
+  country_gdp$rate_per_100k,
+  method = "spearman",
+  exact = FALSE
+)
+spearman_rate_pos <- cor.test(
+  country_gdp_pos$gdp_per_capita,
+  country_gdp_pos$rate_per_100k,
+  method = "spearman",
+  exact = FALSE
+)
+spearman_deaths_pos <- cor.test(
+  country_gdp_pos$gdp_per_capita,
+  country_gdp_pos$deaths,
+  method = "spearman",
+  exact = FALSE
+)
+```
+
+The rate sample has `r nrow(country_rates)` countries and `r fmt_int(sum(country_rates$deaths))` reported deaths. The GDP sample has `r nrow(country_gdp)` countries and `r fmt_int(sum(country_gdp$deaths))` deaths. The difference is the country-years in @tbl-gdp-gap, including South Sudan and Eritrea, which have no GDP per capita in the years they reported and so are not in the GDP model at all.
+
+A Poisson model for the GDP specification had residual deviance `r fmt_int(pois_deviance)` on `r fmt_int(pois_df)` degrees of freedom (AIC `r fmt_int(pois_aic)`). That is far more variation than a Poisson model allows. The negative binomial model had AIC `r fmt_int(nb_aic)` and a dispersion estimate theta of `r fmt_rho(nb_theta)`. Smaller theta means more extra-Poisson variation. The negative binomial model is the one used below. Wald 95% intervals are reported with it.
 
 ## Results
 
-Figure 1:
+### How many countries reported
+
 ```{r}
-#summarize our data into one table
-rabies_yearly <- rabies_gdp |>
-    group_by(Year) |>
-    summarize(
-        Total_Deaths = sum(Deaths, na.rm = TRUE)
+#| label: tbl-coverage
+#| tbl-cap: "Countries with a numeric WHO report, by year. A report of zero deaths counts as reporting. Blank WHO values do not."
+coverage <- who |>
+  group_by(year) |>
+  summarise(
+    countries_in_file = n_distinct(iso3),
+    countries_reporting = sum(!is.na(deaths)),
+    countries_reporting_zero = sum(!is.na(deaths) & deaths == 0),
+    countries_reporting_positive = sum(!is.na(deaths) & deaths > 0),
+    reported_deaths = sum(deaths, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+stopifnot(abs(sum(coverage$reported_deaths) - sum(who$deaths, na.rm = TRUE)) < 1e-6)
+
+coverage_display <- coverage |>
+  transmute(
+    Year = year,
+    `Countries in the file` = countries_in_file,
+    `Countries reporting` = countries_reporting,
+    `Of which reported zero` = countries_reporting_zero,
+    `Reported one or more deaths` = countries_reporting_positive,
+    `Reported deaths` = fmt_int(reported_deaths)
+  )
+
+pre <- coverage |> filter(year <= 2019)
+pre_min <- min(pre$countries_reporting)
+pre_min_years <- pre$year[pre$countries_reporting == pre_min]
+pre_max <- max(pre$countries_reporting)
+pre_max_years <- pre$year[pre$countries_reporting == pre_max]
+n_pre_above_100 <- sum(pre$countries_reporting > 100)
+
+top_death_years <- coverage |>
+  arrange(desc(reported_deaths)) |>
+  slice_head(n = 3)
+top_death_phrase <- fmt_list(paste0(
+  top_death_years$year, " (", fmt_int(top_death_years$reported_deaths), ")"
+))
+low_deaths_value <- min(coverage$reported_deaths)
+low_death_years <- coverage$year[coverage$reported_deaths == low_deaths_value]
+
+top_2016 <- who |>
+  filter(year == 2016, !is.na(deaths)) |>
+  arrange(desc(deaths)) |>
+  slice_head(n = 3)
+phrase_2016 <- fmt_list(paste0(top_2016$country, " (", fmt_int(top_2016$deaths), ")"))
+share_2016 <- sum(top_2016$deaths) / sum(who$deaths[who$year == 2016], na.rm = TRUE)
+deaths_2016 <- sum(who$deaths[who$year == 2016], na.rm = TRUE)
+
+n_report <- function(y) coverage$countries_reporting[coverage$year == y]
+n_zero <- function(y) coverage$countries_reporting_zero[coverage$year == y]
+n_deaths_year <- function(y) coverage$reported_deaths[coverage$year == y]
+rep_2018_2021 <- range(coverage$countries_reporting[coverage$year %in% 2018:2021])
+after_low <- coverage |> filter(year > min(low_death_years))
+rebound_year <- after_low$year[which.max(after_low$reported_deaths)]
+rebound_deaths <- max(after_low$reported_deaths)
+
+kable(coverage_display)
+```
+
+```{r}
+#| label: fig-coverage
+#| fig-cap: "Countries with a numeric report of human rabies deaths, by year. Grey segments reported zero deaths. Blue segments reported at least one. Countries that did not report are not in the bars."
+#| fig-alt: "Stacked bar chart of countries reporting zero human rabies deaths or at least one death, from 2010 to 2024. The bars shorten after 2021."
+coverage_long <- coverage |>
+  select(year, countries_reporting_zero, countries_reporting_positive) |>
+  pivot_longer(-year, names_to = "group", values_to = "countries") |>
+  mutate(
+    group = recode_values(
+      group,
+      "countries_reporting_zero" ~ "Reported zero deaths",
+      "countries_reporting_positive" ~ "Reported one or more deaths"
+    ),
+    group = factor(
+      group,
+      levels = c("Reported zero deaths", "Reported one or more deaths")
     )
-#plot global deaths per year
-ggplot(
-  rabies_yearly,
-  aes(x = Year, y = Total_Deaths)
-) +
-  geom_line(linewidth = 1) +
-  geom_point(size = 2) +
-  scale_x_continuous(
-    breaks = seq(2010, 2024, by = 2)
-  ) +
+  )
+
+ggplot(coverage_long, aes(x = year, y = countries, fill = group)) +
+  geom_col(width = 0.8) +
+  scale_x_continuous(breaks = 2010:2024) +
+  scale_y_continuous(breaks = seq(0, 140, by = 20), expand = expansion(mult = c(0, 0.05))) +
+  scale_fill_manual(values = c(
+    "Reported zero deaths" = "#bdbdbd",
+    "Reported one or more deaths" = "#2c7fb8"
+  )) +
   labs(
-    title = "Global Reported Human Rabies Deaths, 2010–2024",
+    x = "Year",
+    y = "Countries with a numeric report",
+    fill = NULL,
+    caption = "Source: WHO. A blank value is not counted as a report."
+  ) +
+  theme_rabies() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+From 2010 through 2019, the number of countries with a numeric report ranged from `r pre_min` (`r fmt_years(pre_min_years)`) to `r pre_max` (`r fmt_years(pre_max_years)`). The count was above 100 in `r n_pre_above_100` of those `r nrow(pre)` years, not in every year. It was still `r n_report(2020)` in 2020 and `r n_report(2021)` in 2021, then `r n_report(2022)` in 2022, `r n_report(2023)` in 2023, and `r n_report(2024)` in 2024. The drop is real. It is clearest after 2021, not in 2020 itself.
+
+Many of those reports were zeros. In 2010, `r n_zero(2010)` of `r n_report(2010)` reporting countries reported zero deaths. In 2024, `r n_zero(2024)` of `r n_report(2024)` did. Later years sum deaths over a smaller set of countries, and a larger share of that set reported at least one death. @fig-coverage shows both the shorter bars and that change in mix.
+
+### Reported deaths by year
+
+```{r}
+#| label: fig-deaths-year
+#| fig-cap: "Sum of reported human rabies deaths among countries that submitted a number that year."
+#| fig-alt: "Line chart of summed reported human rabies deaths from 2010 to 2024, highest in the middle of the series and lowest around 2021."
+ggplot(coverage, aes(x = year, y = reported_deaths)) +
+  geom_line(linewidth = 0.8, color = "#2c7fb8") +
+  geom_point(size = 2.2, color = "#2c7fb8") +
+  scale_x_continuous(breaks = 2010:2024) +
+  scale_y_continuous(labels = label_comma(), expand = expansion(mult = c(0, 0.05))) +
+  labs(
     x = "Year",
     y = "Reported human rabies deaths",
-    caption = "Source: World Health Organization"
+    caption = "Source: WHO. Countries with no report are omitted, not treated as zero."
   ) +
-  theme_minimal()
+  theme_rabies() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-  Figure 1 shows the total number of reported human rabies deaths globally between 2010 and 2024. The data demonstrate substantial year to year variation, with notable peaks in 2010, 2016, and 2023 and lower reported mortality during several intervening years. A pronounced decline in reported deaths occurred around 2020–2021, followed by a sharp increase by 2023. However, this pattern should be interpreted cautiously because the number of countries reporting rabies surveillance data also declined after 2020. Prior to 2020, more than 100 countries reported rabies mortality data in many years, whereas reporting coverage decreased steadily in subsequent years. Despite the smaller number of reporting countries, reported deaths in later years returned to levels comparable with earlier periods such as 2010 and 2011. This suggests that changes in surveillance completeness may have influenced the apparent temporal pattern in reported global rabies mortality.
 
-Figure 2:
+@fig-deaths-year is the sum of the reports behind @tbl-coverage. Over the whole file that sum is `r fmt_int(n_reported_deaths)` deaths. The three highest years were `r top_death_phrase`. The lowest was `r fmt_int(low_deaths_value)` in `r fmt_years(low_death_years)`. In 2016, `r phrase_2016` accounted for `r fmt_int(sum(top_2016$deaths))` of `r fmt_int(deaths_2016)` reported deaths (`r fmt_pct(share_2016)`).
+
+The lower totals in 2018–2021 happened while between `r rep_2018_2021[1]` and `r rep_2018_2021[2]` countries were still reporting. That dip is not explained by a collapse in the number of reporting countries. After `r fmt_years(low_death_years)`, the summed total rises again and is highest in `r rebound_year` (`r fmt_int(rebound_deaths)`). The clearer drop in how many countries report comes in 2022–2024, during and after that rebound. Because the mix of countries also changed, a high total in a later year is not, by itself, evidence that deaths rose worldwide.
+
+### Countries with the most reported deaths
+
 ```{r}
-#get the top 10
-top10 <- rabies_gdp |>
-    group_by(Country) |>
-    summarize(
-        Total_Deaths = sum(Deaths, na.rm = TRUE),
-        GDP_per_capita = mean(`GDP per capita`, na.rm = TRUE),
-        .groups = "drop"
-    ) |>
-    arrange(desc(Total_Deaths)) |>
-    slice_head(n = 10)
-#graph top 10
+#| label: tbl-top-counts
+#| tbl-cap: "Ten countries with the most reported human rabies deaths. Years are years with a numeric report. GDP per capita is the mean over years that also have a GDP value. The rate uses the same years as the rate sample."
+top10 <- who |>
+  filter(!is.na(deaths)) |>
+  group_by(iso3, country) |>
+  summarise(deaths = sum(deaths), .groups = "drop") |>
+  arrange(desc(deaths)) |>
+  slice_head(n = 10) |>
+  left_join(country_rates |> select(iso3, years, rate_per_100k), by = "iso3") |>
+  left_join(country_gdp |> select(iso3, gdp_per_capita), by = "iso3")
+
+stopifnot(all(!is.na(top10$gdp_per_capita)))
+stopifnot(all(!is.na(top10$rate_per_100k)))
+
+leader <- top10 |> slice(1)
+others_gdp <- top10$gdp_per_capita[top10$iso3 != leader$iso3]
+others_min <- min(others_gdp)
+others_max <- max(others_gdp)
+
+top10_display <- top10 |>
+  transmute(
+    Country = country,
+    `Reporting years` = years,
+    Deaths = fmt_int(deaths),
+    `Average GDP per capita` = fmt_gdp(gdp_per_capita),
+    `Deaths per 100,000 person-years` = fmt_rate(rate_per_100k)
+  )
+
+kable(top10_display)
+```
+
+```{r}
+#| label: fig-top-counts
+#| fig-cap: "Ten countries with the most reported human rabies deaths, 2010–2024. Color is average GDP per capita over the years used for that country's GDP."
+#| fig-alt: "Horizontal bar chart of the ten countries with the most reported human rabies deaths. China has the longest bar and a higher GDP per capita than the other nine."
+#| fig-height: 6
 ggplot(
   top10,
-  aes(
-    x = reorder(Country, Total_Deaths),
-    y = Total_Deaths,
-    fill = GDP_per_capita
-  )
+  aes(x = reorder(country, deaths), y = deaths, fill = gdp_per_capita)
 ) +
   geom_col() +
   coord_flip() +
+  scale_y_continuous(labels = label_comma(), expand = expansion(mult = c(0, 0.05))) +
+  scale_fill_viridis_c(
+    option = "cividis",
+    breaks = c(2000, 4000, 6000, 8000),
+    labels = label_comma()
+  ) +
+  guides(fill = guide_colorbar(barwidth = 0.7, barheight = 8)) +
   labs(
-    title = "Top 10 Countries by Reported Human Rabies Deaths",
-    subtitle = "Bar color represents average GDP per capita, 2010–2024",
     x = NULL,
     y = "Total reported deaths",
     fill = "Average GDP\nper capita (US$)",
-    caption = "Deaths were summed across available observations from 2010–2024."
+    caption = "Sums cover years with a numeric report. Source: WHO and World Bank."
   ) +
-  theme_minimal()
+  theme_rabies() +
+  theme(legend.position = "right")
 ```
-Figure 2 shows the 10 countries with the highest cumulative number of reported human rabies deaths between 2010 and 2024. Bar color represents the average GDP per capita for each country during the same period. Most countries with the highest reported rabies mortality had relatively low average GDP per capita, suggesting an inverse relationship between economic development and reported rabies deaths. China was a notable exception, exhibiting both the highest cumulative number of reported rabies deaths and a substantially higher GDP per capita than the other countries in the top 10.
 
-Figure 3:
+`r leader$country` has the most reported deaths (`r fmt_int(leader$deaths)`), over `r leader$years` reporting years. Its average GDP per capita was `r fmt_gdp(leader$gdp_per_capita)`. The other nine countries in @tbl-top-counts ranged from `r fmt_gdp(others_min)` to `r fmt_gdp(others_max)`. `r if (others_max < 5000) "All nine are below $5,000." else "They are not all below $5,000."` `r if (leader$gdp_per_capita > others_max) paste0(leader$country, " is the high-GDP exception on this count list.") else paste0(leader$country, " does not have a higher GDP per capita than the other nine.")`
+
+The same table shows why the counts are a poor ranking of risk. The rate column does not follow the death column. Reporting years also differ. India, Kenya, Angola, and several others are not in the file for all 15 years, so their totals are not a full-period census.
+
+### Population-adjusted rates
+
 ```{r}
-#summarize all countries 
-country_summary <- rabies_gdp |>
-     group_by(Country) |>
-     summarize(
-         Total_Deaths = sum(Deaths, na.rm = TRUE),
-         GDP_per_capita = mean(`GDP per capita`, na.rm = TRUE),
-         .groups = "drop"
-     )
-country_summary_plot <- country_summary |>
-  filter(
-    Total_Deaths > 0,
-    GDP_per_capita > 0,
-    is.finite(GDP_per_capita)
+#| label: tbl-top-rates
+#| tbl-cap: "Ten highest reported death rates. Person-years are the sum of population in years with a numeric report. A rate based on one or two years, or on a handful of deaths, is unstable."
+top_rates <- country_rates |>
+  arrange(desc(rate_per_100k), desc(deaths)) |>
+  slice_head(n = 10)
+
+top_rates_display <- top_rates |>
+  transmute(
+    Country = country,
+    `Income group` = income_group,
+    `Reporting years` = years,
+    Deaths = fmt_int(deaths),
+    `Person-years (millions)` = format(
+      round(person_years / 1e6, 1),
+      nsmall = 1,
+      big.mark = ",",
+      scientific = FALSE,
+      trim = TRUE
+    ),
+    `Deaths per 100,000 person-years` = fmt_rate(rate_per_100k)
+  )
+
+count_not_rate <- top10 |>
+  filter(!iso3 %in% top_rates$iso3) |>
+  arrange(desc(deaths))
+both <- top10 |>
+  filter(iso3 %in% top_rates$iso3) |>
+  arrange(desc(deaths))
+both_phrase <- fmt_list(both$country)
+not_rate_phrase <- fmt_list(count_not_rate$country)
+
+leader_rank <- rank(-country_rates$rate_per_100k, ties.method = "min")[
+  country_rates$iso3 == leader$iso3
+]
+leader_rate <- country_rates$rate_per_100k[country_rates$iso3 == leader$iso3]
+hi_rate <- top_rates |> slice(1)
+
+kable(top_rates_display)
+```
+
+The highest rate in this file is `r hi_rate$country`, at `r fmt_rate(hi_rate$rate_per_100k)` reported deaths per 100,000 person-years, from `r fmt_int(hi_rate$deaths)` deaths over `r hi_rate$years` reporting years. That is not a 15-year average. Several other countries near the top of @tbl-top-rates also rest on a short run of years or on very few deaths. Those ranks can move if another year is reported.
+
+`r leader$country`, which leads the death totals, ranks `r leader_rank` of `r nrow(country_rates)` countries on the rate (`r fmt_rate(leader_rate)` per 100,000 person-years). Countries in both top-10 lists are `r both_phrase`. Countries in the top 10 by deaths but not by rate are `r not_rate_phrase`. Population adjustment changes the reading of the count list. It does not say the count list is unimportant: those are still the countries that reported the most deaths.
+
+South Sudan is high on the rate list and has no GDP per capita in these years, so it is in the rate and income results and not in the GDP model. Eritrea is in the same position and is not in the top 10 rates.
+
+### GDP per capita
+
+```{r}
+#| label: fig-gdp-rate
+#| fig-cap: "Reported death rate and average GDP per capita. Points are countries with at least one reported death. The curve is the fitted mean rate from the negative binomial model, which also includes countries with zero deaths. Those countries are omitted here because the rate axis is logarithmic."
+#| fig-alt: "Scatter plot of reported rabies death rate against GDP per capita on log scales, with a downward curve from the negative binomial model."
+#| fig-height: 5.5
+b0 <- coef(m_gdp)[["(Intercept)"]]
+b1 <- coef(m_gdp)[["log_gdp"]]
+gdp_grid <- tibble(
+  gdp_per_capita = exp(seq(
+    log(min(country_gdp$gdp_per_capita)),
+    log(max(country_gdp$gdp_per_capita)),
+    length.out = 200
+  ))
+)
+gdp_grid$rate_per_100k <- exp(b0 + b1 * log(gdp_grid$gdp_per_capita)) * 1e5
+
+label_points <- country_gdp |>
+  filter(iso3 %in% c("CHN", "IND", "PHL", "LBR", "KEN", "USA"), deaths > 0) |>
+  mutate(
+    label = recode_values(
+      iso3,
+      "CHN" ~ "China",
+      "IND" ~ "India",
+      "PHL" ~ "Philippines",
+      "LBR" ~ "Liberia",
+      "KEN" ~ "Kenya",
+      "USA" ~ "United States"
     )
-#graph relation between GDP per capita and rabies deaths
-ggplot(
-  country_summary_plot,
-  aes(
-    x = GDP_per_capita,
-    y = Total_Deaths
   )
-) +
-  geom_point(size = 2, alpha = 0.5) +
-  geom_smooth(method = "lm", color = "red") +
-  scale_x_log10() +
-  scale_y_log10() +
+
+ggplot(country_gdp_pos, aes(x = gdp_per_capita, y = rate_per_100k)) +
+  geom_point(size = 2, alpha = 0.75, color = "#2c7fb8") +
+  geom_line(
+    data = gdp_grid,
+    aes(x = gdp_per_capita, y = rate_per_100k),
+    color = "#b22222",
+    linewidth = 0.8
+  ) +
+  geom_text(
+    data = label_points,
+    aes(label = label),
+    size = 3,
+    vjust = -0.8,
+    check_overlap = TRUE
+  ) +
+  scale_x_log10(labels = label_comma()) +
+  scale_y_log10(labels = label_number(drop0trailing = TRUE)) +
   labs(
-    title = "Relationship Between GDP per Capita and Human Rabies Deaths",
-    subtitle = "Countries with zero reported deaths were excluded from the log-scale figure",
     x = "Average GDP per capita (current US$, log scale)",
-    y = "Total reported human rabies deaths (log scale)"
+    y = "Reported deaths per 100,000 person-years (log scale)",
+    caption = "Source: WHO and World Bank. The curve includes zeros; the points do not."
   ) +
-  theme_minimal()
-
-#Correlation Analysis
-cor.test(
-     country_summary_plot$GDP_per_capita,
-     country_summary_plot$Total_Deaths,
-     method = "spearman",
-     exact = FALSE
- )
+  theme_rabies()
 ```
-Figure 3 shows the relationship between average GDP per capita and total reported human rabies deaths among reporting countries from 2010–2024. The data show a negative relationship between these variables, with countries having lower GDP per capita generally reporting higher numbers of human rabies deaths. A Spearman rank correlation found a statistically significant, moderate negative association between GDP per capita and reported human rabies deaths (ρ = −0.454, p < 0.001). These results suggest that economic status is associated with reported rabies burden, although this relationship does not establish causation and may be influenced by other factors.
 
-Figure 4
 ```{r}
-#summarize income group and deaths into one table
-income_country <- rabies_gdp |>
-  group_by(Country, `Income Group`) |>
-  summarize(
-    Total_Deaths = sum(Deaths, na.rm = TRUE),
-    .groups = "drop"
+#| label: tbl-spearman
+#| tbl-cap: "Spearman rank correlation between average GDP per capita and either the death rate or the cumulative death count. The count row keeps the comparison used in the first draft of this report."
+spearman_display <- tibble(
+  Comparison = c(
+    "Death rate",
+    "Death rate",
+    "Cumulative deaths"
+  ),
+  `Zero-death countries` = c("Included", "Excluded", "Excluded"),
+  Countries = c(
+    nrow(country_gdp),
+    nrow(country_gdp_pos),
+    nrow(country_gdp_pos)
+  ),
+  rho = c(
+    fmt_rho(spearman_rate$estimate),
+    fmt_rho(spearman_rate_pos$estimate),
+    fmt_rho(spearman_deaths_pos$estimate)
+  ),
+  `p value` = c(
+    fmt_p(spearman_rate$p.value),
+    fmt_p(spearman_rate_pos$p.value),
+    fmt_p(spearman_deaths_pos$p.value)
+  )
+)
+
+kable(spearman_display)
+```
+
+```{r}
+#| label: tbl-gdp-models
+#| tbl-cap: "Negative binomial models for reported deaths with a population offset. The rate ratio is for a doubling of GDP per capita. Intervals are Wald 95% confidence intervals."
+gdp_model_display <- bind_rows(
+  doubling_rr(m_gdp) |>
+    mutate(
+      Model = "Main model, zero-death countries included",
+      Countries = nrow(country_gdp),
+      `Countries with zero deaths` = sum(country_gdp$deaths == 0)
+    ),
+  doubling_rr(m_gdp_pos) |>
+    mutate(
+      Model = "Sensitivity, zero-death countries excluded",
+      Countries = nrow(country_gdp_pos),
+      `Countries with zero deaths` = 0L
+    ),
+  doubling_rr(m_gdp_region) |>
+    mutate(
+      Model = "Sensitivity, zeros included and region added",
+      Countries = nrow(country_gdp),
+      `Countries with zero deaths` = sum(country_gdp$deaths == 0)
+    )
+) |>
+  transmute(
+    Model,
+    Countries,
+    `Countries with zero deaths`,
+    `Rate ratio for a doubling of GDP per capita` = fmt_rr(rr),
+    `95% CI` = paste0(fmt_rr(lo), " to ", fmt_rr(hi)),
+    `p value` = fmt_p(p)
   )
 
-income_country_plot <- income_country |>
-  filter(
-    !is.na(`Income Group`),
-    Total_Deaths > 0
+kable(gdp_model_display)
+```
+
+Among the `r nrow(country_gdp)` countries with GDP per capita, the Spearman correlation between GDP per capita and the death rate is `r fmt_rho(spearman_rate$estimate)` (p `r fmt_p(spearman_rate$p.value)`). Dropping the `r sum(country_gdp$deaths == 0)` countries with zero deaths leaves it at `r fmt_rho(spearman_rate_pos$estimate)` (p `r fmt_p(spearman_rate_pos$p.value)`, `r nrow(country_gdp_pos)` countries). The association does not depend on keeping the zeros. On the cumulative-count scale, among countries with at least one death, rho is `r fmt_rho(spearman_deaths_pos$estimate)` (p `r fmt_p(spearman_deaths_pos$p.value)`). That count correlation is close to the one in the first draft of this report. The rate correlation is the fairer summary, because a large country can report many deaths at a modest rate.
+
+In the main negative binomial model, a doubling of GDP per capita is associated with a rate ratio of `r fmt_rr(rr_primary$rr)` (95% CI `r fmt_rr(rr_primary$lo)` to `r fmt_rr(rr_primary$hi)`). Excluding zero-death countries, the ratio is `r fmt_rr(rr_positive$rr)` (`r fmt_rr(rr_positive$lo)` to `r fmt_rr(rr_positive$hi)`). Adding region, it is `r fmt_rr(rr_region$rr)` (`r fmt_rr(rr_region$lo)` to `r fmt_rr(rr_region$hi)`). The direction is the same in all three fits. This is not an estimate of what would happen if GDP rose. GDP is standing in for a bundle of conditions that this file does not measure: dog vaccination, post-exposure prophylaxis, health services, and whether a death is recognized and reported. It is also an ecological association. A relationship between country averages does not show that lower-income people within a country have higher risk.
+
+@fig-gdp-rate should be read with that caveat. The red curve is the mean rate from the main model, not a straight-line fit drawn through the logged points. Countries with a rate of zero cannot be drawn on a log scale. There are `r sum(country_gdp$deaths == 0)` of them, and they are in the model.
+
+### Income group
+
+```{r}
+#| label: tbl-income
+#| tbl-cap: "Reported deaths by World Bank income group. The pooled rate is total deaths divided by total person-years. The rate ratio is from a negative binomial model with a population offset, compared with high income. The model ratio is more sensitive to high-rate countries than the pooled rate is."
+income_rr <- tidy(m_inc, conf.int = TRUE, exponentiate = TRUE) |>
+  filter(term != "(Intercept)") |>
+  mutate(income_group = sub("^income_f", "", term)) |>
+  select(income_group, estimate, conf.low, conf.high, p.value)
+
+income_summary <- country_rates |>
+  group_by(income_group) |>
+  summarise(
+    n = n(),
+    zeros = sum(deaths == 0),
+    deaths = sum(deaths),
+    median_rate = median(rate_per_100k),
+    pooled_rate = sum(deaths) / sum(person_years) * 1e5,
+    .groups = "drop"
+  ) |>
+  left_join(income_rr, by = "income_group") |>
+  mutate(income_group = factor(income_group, levels = income_levels)) |>
+  arrange(income_group)
+
+income_display <- income_summary |>
+  transmute(
+    `Income group` = as.character(income_group),
+    Countries = n,
+    `Countries with zero deaths` = zeros,
+    `Reported deaths` = fmt_int(deaths),
+    `Median rate` = fmt_rate(median_rate),
+    `Pooled rate` = fmt_rate(pooled_rate),
+    `Rate ratio vs high income` = if_else(is.na(estimate), "1 (reference)", fmt_rr(estimate)),
+    `95% CI` = if_else(is.na(estimate), "—", paste0(fmt_rr(conf.low), " to ", fmt_rr(conf.high))),
+    `p value` = if_else(is.na(estimate), "—", fmt_p(p.value))
   )
-#graph income group and deaths 
+
+umi_deaths <- income_summary$deaths[income_summary$income_group == "Upper middle income"]
+china_phl_deaths <- sum(country_rates$deaths[country_rates$iso3 %in% c("CHN", "PHL")])
+china_deaths <- sum(country_rates$deaths[country_rates$iso3 == "CHN"])
+eap_deaths <- sum(country_rates$deaths[country_rates$wb_region == "East Asia & Pacific"])
+hi_leader <- country_rates |>
+  filter(income_group == "High income") |>
+  arrange(desc(deaths)) |>
+  slice(1)
+
+kable(income_display)
+```
+
+```{r}
+#| label: fig-income-box
+#| fig-cap: "Country death rates by income group, among countries with at least one reported death. The axis is logarithmic. Countries that reported only zeros are not plotted; they are counted in the income table."
+#| fig-alt: "Box plots of reported rabies death rates by World Bank income group on a log scale, for countries with at least one death. High-income countries sit lower than the other groups."
 ggplot(
-  income_country_plot,
-  aes(
-    x = `Income Group`,
-    y = Total_Deaths
-  )
+  country_rates |> filter(deaths > 0),
+  aes(x = factor(income_group, levels = income_levels), y = rate_per_100k)
 ) +
-  geom_boxplot() +
-  scale_y_log10() +
+  geom_boxplot(fill = "#c6dbef", outlier.color = "#08519c", outlier.alpha = 0.75) +
+  scale_y_log10(labels = label_number(drop0trailing = TRUE)) +
   labs(
-    title = "Reported Rabies Deaths by Income Group",
-    subtitle = "Countries with zero reported deaths were excluded from the log-scale figure",
-    x = "Income Group",
-    y = "Total reported deaths (log scale)"
+    x = NULL,
+    y = "Reported deaths per 100,000 person-years (log scale)",
+    caption = "Source: WHO and World Bank. Zeros are excluded from this figure only."
   ) +
-  theme_minimal()
-
-#test whether rabies deaths differ among income groups
-kruskal.test(
-  Total_Deaths ~ `Income Group`,
-  data = income_country_plot
-)
-
-#determine which income groups differ
-pairwise.wilcox.test(
-  income_country_plot$Total_Deaths,
-  income_country_plot$`Income Group`,
-  p.adjust.method = "BH"
-)
+  theme_rabies() +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
 ```
-Figure 4 compares reported human rabies deaths across World Bank income groups. High income countries generally had substantially lower reported death totals, while low income and lower middle income countries tended to have higher country level death totals. Upper middle income countries showed greater variation and included a major outlier. A Kruskal-Wallis test found a statistically significant difference in reported rabies deaths among income groups (χ² = 23.139, df = 3, p < 0.001). Pairwise Wilcoxon tests showed that high income countries differed significantly from low income (p = 0.00018), lower middle income (p = 0.00012), and upper middle income countries (p = 0.00029). No statistically significant differences were observed among the three remaining income groups.
+
+High-income countries reported `r fmt_int(income_summary$deaths[income_summary$income_group == "High income"])` deaths in this sample, and `r income_summary$zeros[income_summary$income_group == "High income"]` of `r income_summary$n[income_summary$income_group == "High income"]` countries reported none. The median rate in that group is `r fmt_rate(income_summary$median_rate[income_summary$income_group == "High income"])`. The pooled rate is `r fmt_rate(income_summary$pooled_rate[income_summary$income_group == "High income"])` per 100,000 person-years, compared with `r fmt_rate(income_summary$pooled_rate[income_summary$income_group == "Low income"])` in the low-income group and `r fmt_rate(income_summary$pooled_rate[income_summary$income_group == "Lower middle income"])` in the lower-middle-income group.
+
+The pooled low-income rate is about `r fmt_rr(income_summary$pooled_rate[income_summary$income_group == "Low income"] / income_summary$pooled_rate[income_summary$income_group == "High income"])` times the pooled high-income rate. The negative binomial rate ratio is larger than that (`r fmt_rr(income_summary$estimate[income_summary$income_group == "Low income"])`, 95% CI `r fmt_rr(income_summary$conf.low[income_summary$income_group == "Low income"])` to `r fmt_rr(income_summary$conf.high[income_summary$income_group == "Low income"])`). The model is pulled by countries with very high rates, and by the many high-income zeros. The pooled rates and the medians are the better description of the size of the gap. The model supports a narrower statement: low-income and lower-middle-income countries still have higher rates than high-income countries when zeros are kept and population is in the offset.
+
+Upper-middle-income countries reported the most deaths (`r fmt_int(umi_deaths)`), but the median rate in that group is low (`r fmt_rate(income_summary$median_rate[income_summary$income_group == "Upper middle income"])`). China and the Philippines account for `r fmt_int(china_phl_deaths)` of those deaths (`r fmt_pct(china_phl_deaths / umi_deaths)`). The group is not one experience. High-income countries stand apart on the median and on the share of countries reporting zero. The other three groups are not interchangeable with each other.
+
+The income label is the World Bank group in the metadata vintage dated `r fmt_date(gdp_updated)`, applied to every year. The largest high-income death total in this file is `r hi_leader$country` (`r fmt_int(hi_leader$deaths)`). That classification is the file's, not a judgment about the income group in every year from 2010 to 2024.
+
+### Region
+
 ```{r}
-#Split or data into country and region
-region_country <- rabies_gdp |>
-  group_by(Country, Region) |>
-  summarize(
-    Total_Deaths = sum(Deaths, na.rm = TRUE),
+#| label: tbl-region
+#| tbl-cap: "Reported deaths by World Bank region. The rate ratio is from a negative binomial model with a population offset, compared with Europe and Central Asia. North America here is Canada and the United States only."
+region_rr <- tidy(m_reg, conf.int = TRUE, exponentiate = TRUE) |>
+  filter(term != "(Intercept)") |>
+  mutate(wb_region = sub("^region_f", "", term)) |>
+  select(wb_region, estimate, conf.low, conf.high, p.value)
+
+region_summary <- country_rates |>
+  group_by(wb_region) |>
+  summarise(
+    n = n(),
+    zeros = sum(deaths == 0),
+    deaths = sum(deaths),
+    median_rate = median(rate_per_100k),
+    pooled_rate = sum(deaths) / sum(person_years) * 1e5,
     .groups = "drop"
+  ) |>
+  left_join(region_rr, by = "wb_region") |>
+  arrange(desc(pooled_rate))
+
+region_display <- region_summary |>
+  transmute(
+    Region = wb_region,
+    Countries = n,
+    `Countries with zero deaths` = zeros,
+    `Reported deaths` = fmt_int(deaths),
+    `Median rate` = fmt_rate(median_rate),
+    `Pooled rate` = fmt_rate(pooled_rate),
+    `Rate ratio vs Europe & Central Asia` = if_else(
+      is.na(estimate), "1 (reference)", fmt_rr(estimate)
+    ),
+    `95% CI` = if_else(
+      is.na(estimate), "—", paste0(fmt_rr(conf.low), " to ", fmt_rr(conf.high))
+    ),
+    `p value` = if_else(is.na(estimate), "—", fmt_p(p.value))
   )
-#clean the country and region data so we can plot
-region_country_plot <- region_country |>
-  filter(
-    !is.na(Region),
-    Total_Deaths > 0
-  )
-#plot the country and region data
- ggplot(
-     region_country_plot,
-     aes(
-         x = Region,
-         y = Total_Deaths
-     )
- ) +
-     geom_boxplot() +
-     scale_y_log10() +
-     labs(
-         title = "Reported Rabies Deaths by Region",
-         subtitle = "Countries with zero reported deaths were excluded from the log-scale figure",
-         x = "Region",
-         y = "Total reported deaths (log scale)"
-     ) +
-     theme_minimal()+
-   theme(
-  axis.text.x = element_text(
-    angle = 45,
-    hjust = 1
-  )
+
+na_phrase <- fmt_list(
+  country_rates$country[country_rates$wb_region == "North America"][
+    order(country_rates$country[country_rates$wb_region == "North America"])
+  ]
 )
-#test whether rabies deaths differ among regions
-kruskal.test(
-     Total_Deaths ~ Region,
-     data = region_country_plot
- )
-#determine which regions differ
-pairwise.wilcox.test(
-     region_country_plot$Total_Deaths,
-     region_country_plot$Region,
-     p.adjust.method = "BH"
- )
+
+kable(region_display)
 ```
-Figure 5 compares reported human rabies deaths across geographic regions. Europe & Central Asia and North America generally had low reported death totals, while Latin America & Caribbean and Middle East & North Africa also tended to have relatively low to moderate reported deaths. In contrast, South Asia, East Asia & Pacific, and Sub-Saharan Africa generally showed higher country-level rabies death totals. A Kruskal–Wallis test found a statistically significant difference in reported rabies deaths among regions (χ² = 29.328, df = 6, p < 0.001). Pairwise Wilcoxon tests showed significant differences between East Asia & Pacific and Europe & Central Asia (p = 0.02460), East Asia & Pacific and Latin America & Caribbean (p = 0.04940), Europe & Central Asia and South Asia (p = 0.03762), Europe & Central Asia and Sub-Saharan Africa (p = 0.00092), and Latin America & Caribbean and Sub-Saharan Africa (p = 0.02460). No statistically significant differences were observed among the remaining pairwise regional comparisons.
+
+```{r}
+#| label: fig-region-rate
+#| fig-cap: "Pooled reported death rate by World Bank region. Each point is total reported deaths divided by total person-years. The axis is logarithmic."
+#| fig-alt: "Dot plot on a log scale of pooled reported rabies death rates by World Bank region. Sub-Saharan Africa is highest and North America is lowest."
+ggplot(region_summary, aes(x = pooled_rate, y = reorder(wb_region, pooled_rate))) +
+  geom_point(size = 3, color = "#2c7fb8") +
+  scale_x_log10(labels = label_number(drop0trailing = TRUE)) +
+  labs(
+    x = "Pooled reported deaths per 100,000 person-years (log scale)",
+    y = NULL,
+    caption = "Source: WHO and World Bank. A few countries dominate some regions."
+  ) +
+  theme_rabies()
+```
+
+Sub-Saharan Africa has the highest pooled rate (`r fmt_rate(region_summary$pooled_rate[region_summary$wb_region == "Sub-Saharan Africa"])` per 100,000 person-years). East Asia and Pacific has the most reported deaths (`r fmt_int(eap_deaths)`), and China alone is `r fmt_pct(china_deaths / eap_deaths)` of that total, so the regional total is not the rate in a typical country there. The median rate in East Asia and Pacific is `r fmt_rate(region_summary$median_rate[region_summary$wb_region == "East Asia & Pacific"])`, below the Sub-Saharan African median of `r fmt_rate(region_summary$median_rate[region_summary$wb_region == "Sub-Saharan Africa"])`.
+
+South Asia's pooled rate is high and the model interval is wide. The region has `r region_summary$n[region_summary$wb_region == "South Asia"]` countries in this sample. Europe and Central Asia and Latin America and the Caribbean are both low, and the model interval for Latin America and the Caribbean includes a rate ratio of 1 relative to Europe and Central Asia. North America in this World Bank grouping is `r region_summary$n[region_summary$wb_region == "North America"]` countries (`r na_phrase`), both with very low rates. The interval for that comparison is wide and also includes 1. Two countries are not a basis for a regional claim.
+
+The pooled Sub-Saharan African rate is about `r fmt_rr(region_summary$pooled_rate[region_summary$wb_region == "Sub-Saharan Africa"] / region_summary$pooled_rate[region_summary$wb_region == "Europe & Central Asia"])` times the pooled rate in Europe and Central Asia. The model rate ratio is `r fmt_rr(region_summary$estimate[region_summary$wb_region == "Sub-Saharan Africa"])` (95% CI `r fmt_rr(region_summary$conf.low[region_summary$wb_region == "Sub-Saharan Africa"])` to `r fmt_rr(region_summary$conf.high[region_summary$wb_region == "Sub-Saharan Africa"])`). Those two summaries are closer to each other here than the income-group model was to its pooled rates. Geography is still not an explanation by itself. Regions with higher rates also tend to have lower GDP per capita, and the GDP association remained after region was added (@tbl-gdp-models).
 
 ## Discussion
 
-Based on the WHO and world bank data we can see some trends. To begin with, the reported number of rabies deaths have fluctuated greatly between 2010-2024. There are major peaks in reported deaths during 2010, 2016 and 2023 with dips in 2014 as well as 2018-2021.The peaks in 2016 were driven by high reports in China, India and Kenya. The dips in 2018-2021 may have been influenced by the lock down due to the COVID-19 pandemic. COVID caused disruptions in rabies surveillance, healthcare access, laboratory testing, and reporting, which could potentially lower reported deaths. With the lockdown due to quarantine there is also the possibility of lowered bites as people did not leave their homes as often, which would also explain the peak in 2022-2023 as restrictions are lifted, although this cannot be determined from the present data. The amount of countries reporting data also dropped significantly following 2020 which may have contributed to lower observed global totals. To fix this moving forward changes in global surveillance and reporting should be considered as well as collaboration between counties to ensure that all reporting is correct.
+Reported human rabies deaths moved around between 2010 and 2024. The high years and the low year are in @fig-deaths-year, and the 2016 total was led by `r phrase_2016`. The lower totals in 2018–2021 line up with the COVID-19 pandemic. Lockdowns, less access to care, and disrupted testing and reporting could all have played a part, and so could a real change in exposures if people were home more often. That cannot be determined from the present data. One pattern argues against a simple story in which the dip is just fewer countries filing a report: between `r rep_2018_2021[1]` and `r rep_2018_2021[2]` countries were still reporting in those years. The number of reporting countries falls more clearly in 2022–2024, after the summed deaths had already come back up, and the countries that still reported were less often reporting zero. Incomplete reporting makes the year-to-year line hard to read as a change in deaths. More consistent reporting would make the next look at this question easier to interpret.
 
-World Bank data was used to examine trends between WHO reported rabies deaths and GDP per capita. Wealthier countries generally had substantially fewer reported rabies deaths, with many high income countries consistently reporting very few deaths each year. A notable exception was China, which had a substantially higher GDP per capita than the other countries with the highest reported rabies burdens. Despite China's strong economic growth, considerable rural poverty and economic inequality have historically persisted (Yao et al., 2004). These economic disparities could potentially contribute to differences in rabies exposure and access to healthcare, although this cannot be determined from the present analysis. The other nine countries with the highest reported rabies death totals had an average GDP per capita below $5,000. Countries with fewer economic resources may have reduced access to disease surveillance, diagnostic testing, post exposure treatment, and other rabies prevention measures, potentially contributing to higher mortality. However, upper middle income countries showed substantial variation, with some countries reporting few or no deaths and others, such as the Philippines, reporting hundreds of deaths in some years. High income countries therefore appear to stand apart from the other income groups, while low, lower middle, and upper middle income countries are considerably more variable. This suggests that although economic status is associated with reported rabies burden, additional risk factors must also be considered. Improving surveillance and access to rabies prevention and treatment to lower resource countries could help identify countries in the greatest need and guide future public health interventions.
+On the count list, wealthier countries generally had fewer reported deaths, with China as the exception: the most deaths, and a higher average GDP per capita than the other nine (`r fmt_gdp(leader$gdp_per_capita)`, against `r fmt_gdp(others_min)` to `r fmt_gdp(others_max)`). Yao, Zhang, and Hanmer (2004) described persistent rural poverty and inequality in China during an earlier period of growth. That is one possible context for a country with a relatively high GDP per capita and a large number of reported rabies deaths, but this analysis does not measure within-country inequality, and it cannot determine whether that history explains the rabies reports. On the rate scale China is not near the top. It ranks `r leader_rank` of `r nrow(country_rates)`. The Philippines stays high on both lists. The other countries that do both are `r both_phrase`. The GDP results agree in direction whether zeros are kept or dropped, and they agree after a simple adjustment for region. That still does not make GDP the cause. Countries with fewer resources may have less access to dog vaccination, diagnostics, and post-exposure treatment, and they may also differ in how completely deaths are recorded. Any of those could produce the pattern in @fig-gdp-rate.
 
-The final investigation examined reported rabies deaths in relation to geographic region. Europe & Central Asia and North America generally had lower reported rabies death totals, while South Asia, East Asia & Pacific, and Sub-Saharan Africa generally showed higher country-level death totals. Middle East & North Africa and Latin America & Caribbean tended to fall between these groups. These findings suggest that the burden of reported human rabies deaths varies geographically; however, geographic location alone is unlikely to explain these differences. Many of the countries within the regions with higher reported rabies burdens also had lower average GDP per capita. Limited economic resources may affect healthcare infrastructure, rabies surveillance, access to post exposure treatment, and animal vaccination programs, potentially contributing to the regional differences observed. Therefore, the association between geographic region and rabies deaths likely reflects a combination of economic, healthcare, surveillance, and disease control factors rather than geography alone.
+High-income countries stand apart: most of them reported no deaths, and the pooled rate is far below the other groups. Upper-middle-income countries are the awkward group in the middle of that story. They reported the most deaths, and China and the Philippines are `r fmt_pct(china_phl_deaths / umi_deaths)` of that total, while the median upper-middle-income country has a much lower rate. The Philippines can report hundreds of deaths in a year inside a group that also contains countries with few or none. Low-income and lower-middle-income countries have higher median and pooled rates than high-income countries. The very large model rate ratios against high income are a comparison with a rate near zero, so the pooled rates in @tbl-income are the numbers to remember. Economic status is associated with the reported rate. It is not a complete account of it.
+
+By region, Sub-Saharan Africa has the highest pooled rate, and East Asia and Pacific has the highest death total largely because of China. South Asia is high on a small number of countries. Europe and Central Asia, Latin America and the Caribbean, and North America are low, with the North America comparison too thin to lean on. Many of the countries in the higher-rate regions also have lower GDP per capita. Limited resources can affect surveillance, treatment, and animal vaccination, so the regional pattern and the income pattern are overlapping descriptions rather than separate causes. The practical point is unchanged. More complete surveillance, and better access to prevention and treatment in the countries with higher reported rates, would make these comparisons more reliable and more useful for deciding where support is needed.
 
 ## Limitations
 
-WIth the data sets pulled through the World Health Organization there were many missing data points from a number of countries. This was more evident in the years following 2020 with the number of reporting countries dropping significantly. The data also only goes to the year 2010-2024 which severely limits the ability to more accurately examine long term historical trends. Due to incomplete surveillance and health systems it is also possible that there is missing or incomplete reported data ascertaining to the amount of reported deaths.Additionally, this analysis used total reported deaths rather than population adjusted mortality rates. Countries with larger populations may therefore have higher death totals partly because they contain more people at risk. Future analyses could incorporate population data to calculate deaths per 100,000 people, allowing for more standardized comparisons between countries. Lastly in Figure 4 and 5 countries with zero reported rabies deaths were excluded as they may have influenced the statistical results, and not helped answere the questions aked in this report.
+The WHO values are reported deaths, not the number of people who died of rabies. Blank cells were left as "no report." They were not filled in as zeros. Published estimates of the global burden of endemic canine rabies are on the order of 59,000 deaths a year (Hampson et al., 2015), far above the roughly `r fmt_int(min(coverage$reported_deaths))` to `r fmt_int(max(coverage$reported_deaths))` deaths a year summed in this file. Most deaths are never laboratory-confirmed or reported. This series also starts in 2010, so it cannot describe a longer historical trend.
+
+Coverage falls after 2021, and countries do not report every year. Person-years cover only years with a numeric report. A country that reports in its worst years will look worse than one that reports every year. Rates based on a few deaths, or on one or two years, are unstable. Liberia's place at the top of the rate list, and several of the other high rates, should be read next to the death count and the number of years.
+
+Income group and region are one World Bank label per country, from metadata dated with the `r fmt_date(gdp_updated)` extract, applied to the whole period. Countries move between income groups. That history is not in this analysis. GDP per capita is in current US dollars, not purchasing-power parity. Total GDP was not used. French Guiana (`r fmt_int(deaths_unmatched_code)` reported deaths) has no World Bank country code and is left out of the rate comparisons. South Sudan and Eritrea have population and an income group but no GDP per capita in the years they reported, so they stay in the rate and income results and drop out of the GDP results. Some other country-years are missing GDP only (@tbl-gdp-gap).
+
+The models give each country one negative binomial count and a population offset. They are not a year-by-year time series, and they are not causal. Income, region, and GDP describe overlapping groups of countries. Adding region to the GDP model is a sensitivity check, not a full attempt to separate those factors. Because the data are country averages, the ecological fallacy applies: the results do not identify which people within a country are at higher risk. The main GDP model keeps zero-death countries. Dropping them did not change the direction of the association. The log-scale figures omit zeros because a logarithm of zero is undefined. Those figures are not the model.
+
+Earlier rank tests on raw death totals, with zeros removed so the data could be logged, are not repeated. They answered a different question and gave more weight to populous countries. The rate, with zeros handled in the model rather than deleted, is the comparison this version of the report stands on.
 
 ## Conclusion
 
-With data from the World Health Organization and World Bank, conclusions can be drawn about global patterns in reported human rabies deaths and their relationship with GDP per capita. Year by year, there were substantial fluctuations in reported rabies deaths, making it difficult to determine the exact causes of these changes without considering differences in surveillance, reporting, and other global events. When World Bank economic data were incorporated into the analysis, a clearer pattern emerged. Countries with greater economic resources generally had lower reported rabies death totals, while countries with lower GDP per capita tended to experience a greater reported burden. However, economic status alone does not explain these differences, as geographic region, healthcare infrastructure, surveillance capacity, access to treatment, and rabies prevention programs may also contribute. Moving forward, improving surveillance and access to rabies prevention and treatment in resource limited countries could provide more complete data while allowing public health resources to be better targeted toward populations at greatest risk.
+A few patterns are consistent in these reported data, and several tempting readings are not. The yearly totals fluctuate, and the number of countries behind them changes, especially after 2021, so the line in @fig-deaths-year is not a clean trend in global deaths. Countries with higher GDP per capita, and high-income countries, have lower reported death rates. The count of deaths tells a related but not identical story: China and India lead the counts and do not lead the rates, and China's GDP per capita sits above the other countries with the largest death totals. Sub-Saharan Africa has the highest pooled rate. East Asia and Pacific and the upper-middle-income group have high death totals that are concentrated in a few countries. None of this isolates a single cause. Surveillance, access to prophylaxis, dog vaccination, and population size all sit between the economic variables and the reported numbers. Improving reporting, and access to prevention and treatment in countries with higher reported rates, would make the data more complete and would put public health resources closer to the populations these reports already flag.
 
 ## References
 
-Dietzschold, B., Li, J., Faber, M., & Schnell, M. (2008). Concepts in the pathogenesis of rabies. Future Virology, 3(5), 481–490. https://doi.org/10.2217/17460794.3.5.481
+Dietzschold, B., Li, J., Faber, M., & Schnell, M. (2008). Concepts in the pathogenesis of rabies. *Future Virology, 3*(5), 481–490. <https://doi.org/10.2217/17460794.3.5.481>
 
-Pieracci, E. G., Pearson, C. M., Wallace, R. M., Blanton, J. D., Whitehouse, E. R., Ma, X., Stauffer, K., Chipman, R. B., & Olson, V. (2019). Vital signs: Trends in human rabies deaths and exposures—United States, 1938–2018. Morbidity and Mortality Weekly Report, 68(23), 524–528. https://doi.org/10.15585/mmwr.mm6823e1
+Hampson, K., Coudeville, L., Lembo, T., Sambo, M., Kieffer, A., Attlan, M., Barrat, J., Blanton, J. D., Briggs, D. J., Cleaveland, S., Costa, P., Freuling, C. M., Hiby, E., Knopf, L., Leanes, F., Meslin, F.-X., Metlin, A., Miranda, M. E., Müller, T., Nel, L. H., Recuenco, S., Rupprecht, C. E., Schumacher, C., Taylor, L., Vigilato, M. A. N., Zinsstag, J., & Dushoff, J. (2015). Estimating the global burden of endemic canine rabies. *PLOS Neglected Tropical Diseases, 9*(4), Article e0003709. <https://doi.org/10.1371/journal.pntd.0003709>
 
-Terryn, S., Francart, A., Rommelaere, H., Stortelers, C., & Van Gucht, S. (2016). Post-exposure treatment with anti-rabies VHH and vaccine significantly improves protection of mice from lethal rabies infection. PLOS Neglected Tropical Diseases, 10(8), Article e0004902. https://doi.org/10.1371/journal.pntd.0004902
+Pieracci, E. G., Pearson, C. M., Wallace, R. M., Blanton, J. D., Whitehouse, E. R., Ma, X., Stauffer, K., Chipman, R. B., & Olson, V. (2019). Vital signs: Trends in human rabies deaths and exposures—United States, 1938–2018. *Morbidity and Mortality Weekly Report, 68*(23), 524–528. <https://doi.org/10.15585/mmwr.mm6823e1>
 
-World Bank. (n.d.). GDP per capita (current US$) [Data set]. World Development Indicators. https://data.worldbank.org/indicator/NY.GDP.PCAP.CD
+Terryn, S., Francart, A., Rommelaere, H., Stortelers, C., & Van Gucht, S. (2016). Post-exposure treatment with anti-rabies VHH and vaccine significantly improves protection of mice from lethal rabies infection. *PLOS Neglected Tropical Diseases, 10*(8), Article e0004902. <https://doi.org/10.1371/journal.pntd.0004902>
 
-World Health Organization. (n.d.). Rabies: Reported rabies deaths in humans, number [Data set]. Global Health Observatory. https://www.who.int/data/gho/data/indicators/indicator-details/GHO/reported-number-of-human-rabies-deaths
+World Bank. (n.d.-a). *GDP per capita (current US$)* [Data set]. World Development Indicators. <https://data.worldbank.org/indicator/NY.GDP.PCAP.CD>
 
-Yao, S., Zhang, Z., & Hanmer, L. (2004). Growing inequality and poverty in China. China Economic Review, 15(2), 145–163. https://doi.org/10.1016/j.chieco.2003.09.002
+World Bank. (n.d.-b). *Population, total* [Data set]. World Development Indicators. <https://data.worldbank.org/indicator/SP.POP.TOTL>
+
+World Health Organization. (n.d.). *Reported number of human rabies deaths* [Data set]. Global Health Observatory. <https://www.who.int/data/gho/data/indicators/indicator-details/GHO/reported-number-of-human-rabies-deaths>
+
+Yao, S., Zhang, Z., & Hanmer, L. (2004). Growing inequality and poverty in China. *China Economic Review, 15*(2), 145–163. <https://doi.org/10.1016/j.chieco.2003.09.002>
+
+## Reproduce this report
+
+The repository README has the install steps. In short, from the project root, with R and Quarto available: install the `renv` package, run `renv::restore()`, then `quarto render`. The rendered report is written to `docs/`. Package versions for this copy are in `renv.lock` and in the session note below. The code and this write-up are under the MIT license. The WHO and World Bank files are not.
+
+## Session info
+
+```{r}
+#| label: session-info
+sessionInfo()
+```
